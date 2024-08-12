@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Chat App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 24px;
+        }
+
+        #chat-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            padding: 10px;
+            background-color: white;
+        }
+
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #fafafa;
+            border-radius: 5px;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.ai {
+            justify-content: flex-start;
+        }
+
+        .message p {
+            margin: 0;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 70%;
+            position: relative;
+        }
+
+        .message.user p {
+            background-color: #dcf8c6;
+            color: #000;
+            border-top-right-radius: 0;
+        }
+
+        .message.ai p {
+            background-color: #ececec;
+            color: #000;
+            border-top-left-radius: 0;
+        }
+
+        .timestamp {
+            font-size: 12px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0 10px;
+        }
+
+        .input-area {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background-color: #eee;
+            border-top: 1px solid #ccc;
+        }
+
+        #input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        @media (max-width: 600px) {
+            #input {
+                font-size: 14px;
+            }
+
+            button {
+                padding: 8px;
+            }
+
+            .avatar {
+                width: 30px;
+                height: 30px;
+            }
+
+            .message p {
+                max-width: 80%;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>Chat with AI</header>
+    <div id="chat-container">
+        <div id="messages"></div>
+        <form id="form" action="" class="input-area">
+            <input id="input" autocomplete="off" placeholder="Type a message..." />
+            <button>Send</button>
+        </form>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+
+        const form = document.getElementById('form');
+        const input = document.getElementById('input');
+        const messages = document.getElementById('messages');
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            if (input.value) {
+                const message = input.value;
+                addMessage(message, 'user');
+                socket.emit('chat message', message);
+                input.value = '';
+            }
+        });
+
+        socket.on('chat message', function (msg) {
+            if (msg.startsWith('AI: ')) {
+                addMessage(msg.substring(4), 'ai');
+            } else {
+                addMessage(msg, 'user');
+            }
+        });
+
+        function addMessage(message, sender) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', sender);
+
+            const messageContent = document.createElement('p');
+            messageContent.textContent = message;
+
+            const timestamp = document.createElement('div');
+            timestamp.classList.add('timestamp');
+            timestamp.textContent = new Date().toLocaleTimeString();
+
+            const avatar = document.createElement('img');
+            avatar.classList.add('avatar');
+            avatar.src = sender === 'user' ? 'https://via.placeholder.com/40/4CAF50/FFFFFF?text=U' : 'https://via.placeholder.com/40/000000/FFFFFF?text=AI';
+
+            if (sender === 'user') {
+                messageElement.appendChild(timestamp);
+                messageElement.appendChild(messageContent);
+                messageElement.appendChild(avatar);
+            } else {
+                messageElement.appendChild(avatar);
+                messageElement.appendChild(messageContent);
+                messageElement.appendChild(timestamp);
+            }
+
+            messages.appendChild(messageElement);
+            messages.scrollTop = messages.scrollHeight;
+        }
+    </script>
+</body>
+
+</html>
